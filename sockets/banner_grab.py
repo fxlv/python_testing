@@ -2,6 +2,8 @@
 import socket
 import sys
 
+DEFAULT_PORT = 22
+
 def usage():
     print "Usage:"
     print "{} <ip:port>".format(sys.argv[0])
@@ -10,7 +12,11 @@ def usage():
 
 try:
     target = sys.argv[1]
-    ip, port = target.split(":")
+    if len(target.split(":")) == 2:
+        ip, port = target.split(":")
+    else:
+        ip = target
+        port = DEFAULT_PORT
 except:
     usage()
 
