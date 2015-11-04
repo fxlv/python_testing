@@ -11,7 +11,7 @@ import sys
 import time
 import datetime
 import argparse
-
+from threading import Thread
 
 DEBUG = False
 def connect(target, port):
@@ -24,12 +24,14 @@ def connect(target, port):
         s.connect((target, int(port)))
         if DEBUG: print "Connected"
     except Exception, e:
-        print "Failed to connect"
-        print e
-        sys.exit(1)
+        if DEBUG: 
+            print "Failed to connect"
+            print e
+        return False
     if DEBUG: print "Receiving..."
     try:
         banner = s.recv(2048)
+        return True
     except Exception, e:
         if "timed out" in e:
             if DEBUG: print "Got a timeout, lets try sendig something first"
@@ -50,9 +52,9 @@ def connect(target, port):
 def check_target(target, port):
     now = datetime.datetime.now()
     if connect(target, port):
-        print now, "OK"
+        print now, target, port, "OK"
     else:
-        print now, "FAIL"
+        print now, target, port, "FAIL"
 
 def main():
     parser = argparse.ArgumentParser()
@@ -63,12 +65,18 @@ def main():
     args = parser.parse_args()
 
     target = args.target
+    if len(target.split(",")) > 1:
+        targets = target.split(",")
+    else:
+        targets = [target]
     port = args.port
     count = args.c
     sleep_time = args.s
     print "Target: {}, port: {}, connect count: {}".format(target, port, count)
     for i in range(0,count):
-        check_target(target, port)
+        for target in targets:
+            t = Thread(target=check_target, args=(target, port))
+            t.start()
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
