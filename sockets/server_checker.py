@@ -72,4 +72,9 @@ def main():
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print
+        print "Ctrl-c pressed. Aborting."
+        sys.exit(0)
