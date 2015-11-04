@@ -10,36 +10,18 @@ import socket
 import sys
 import time
 import datetime
+import argparse
 
-DEFAULT_PORT = 80
+
 DEBUG = False
-REQUEST_COUNT = 10
-
-def usage():
-    print "Usage:"
-    print "{} <ip:port>".format(sys.argv[0])
-    print
-    sys.exit(0)
-
-try:
-    target = sys.argv[1]
-    if len(target.split(":")) == 2:
-        ip, port = target.split(":")
-    else:
-        ip = target
-        port = DEFAULT_PORT
-except:
-    usage()
-
-
-def connect(ip, port):
+def connect(target, port):
     socket.setdefaulttimeout(1)
     s = socket.socket()
 
     banner = None
     try:
-        if DEBUG: print "Connecting to {}:{}".format(ip, port)
-        s.connect((ip, int(port)))
+        if DEBUG: print "Connecting to {}:{}".format(target, port)
+        s.connect((target, int(port)))
         if DEBUG: print "Connected"
     except Exception, e:
         print "Failed to connect"
@@ -52,7 +34,7 @@ def connect(ip, port):
         if "timed out" in e:
             if DEBUG: print "Got a timeout, lets try sendig something first"
             if DEBUG: print "Sending 'hi!'..."
-            hi = "GET /index.html HTTP/1.1\nUser-Agent: Python/0.01\nHost: {}\nAccept: */*\n\n".format(ip)
+            hi = "GET /index.html HTTP/1.1\nUser-Agent: Python/0.01\nHost: {}\nAccept: */*\n\n".format(target)
             s.send(hi)
             if DEBUG: print "Reveiving..."
             banner = s.recv(2048)
@@ -66,12 +48,25 @@ def connect(ip, port):
     return False
 
 def main():
-    for i in range(1,REQUEST_COUNT):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("target", help="Target IP or hostname")
+    parser.add_argument("port", type=int, help="Target port")
+    parser.add_argument("-c", default=1, type=int, help="Request count")
+    parser.add_argument("-s",  default=1, type=int, help="Sleep time between retries (seconds)")
+    args = parser.parse_args()
+
+    target = args.target
+    port = args.port
+    count = args.c
+    sleep_time = args.s
+    print "Target: {}, port: {}, connect count: {}".format(target, port, count)
+    for i in range(0,count):
         now = datetime.datetime.now()
-        if connect(ip, port):
+        if connect(target, port):
             print now, "OK"
-            time.sleep(2)
         else:
             print now, "FAIL"
+        time.sleep(sleep_time)
+
 if __name__ == "__main__":
     main()
