@@ -11,7 +11,7 @@ import sys
 import time
 import datetime
 import argparse
-from threading import Thread
+from threading import Thread, Semaphore
 
 DEBUG = False
 
@@ -53,15 +53,20 @@ def connect(target, port):
     return False
 
 
-def check_target(target, port):
+def check_target(target, port, s):
     now = datetime.datetime.now()
     if connect(target, port):
+        s.acquire()
         print now, target, port, "OK"
+        s.release()
     else:
+        s.acquire()
         print now, target, port, "FAIL"
+        s.release()
 
 
 def main():
+    s = Semaphore()
     parser = argparse.ArgumentParser()
     parser.add_argument("target", help="Target IP or hostname")
     parser.add_argument("port", type=int, help="Target port")
@@ -83,7 +88,7 @@ def main():
     print "Target: {}, port: {}, connect count: {}".format(target, port, count)
     for i in range(0, count):
         for target in targets:
-            t = Thread(target=check_target, args=(target, port))
+            t = Thread(target=check_target, args=(target, port, s))
             t.start()
         time.sleep(sleep_time)
 
