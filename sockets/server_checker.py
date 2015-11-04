@@ -47,6 +47,13 @@ def connect(target, port):
             return True
     return False
 
+def check_target(target, port):
+    now = datetime.datetime.now()
+    if connect(target, port):
+        print now, "OK"
+    else:
+        print now, "FAIL"
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("target", help="Target IP or hostname")
@@ -61,11 +68,7 @@ def main():
     sleep_time = args.s
     print "Target: {}, port: {}, connect count: {}".format(target, port, count)
     for i in range(0,count):
-        now = datetime.datetime.now()
-        if connect(target, port):
-            print now, "OK"
-        else:
-            print now, "FAIL"
+        check_target(target, port)
         time.sleep(sleep_time)
 
 if __name__ == "__main__":
