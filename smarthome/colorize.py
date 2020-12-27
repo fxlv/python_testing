@@ -14,6 +14,7 @@ import random
 import time
 import paho.mqtt.client as mqtt
 import sys
+import signal
 
 
 class MqttClient():
@@ -84,8 +85,13 @@ def main(mqtt_client):
         print(msg)
         rand_sleep()
 
+def handle_sigterm(sig, frame):
+    raise SystemExit
 
 if __name__ == "__main__":
+
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
     mqtt_server = os.getenv("MQTT_SERVER", None)
     mqtt_topic = os.getenv("MQTT_TOPIC", None)
     if mqtt_topic is None or mqtt_server is None:
@@ -95,6 +101,6 @@ if __name__ == "__main__":
     try:
         while True:
             main(mqtt_client)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         print("End of the line. Switching the light off.")
         mqtt_client.pub('{"state":"OFF"}')
