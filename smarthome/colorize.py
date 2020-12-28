@@ -16,9 +16,12 @@ import random
 import signal
 import sys
 import time
+import pytz
 from collections import namedtuple
 
 import paho.mqtt.client as mqtt
+
+TIMEZONE="Europe/Riga"
 
 
 class MqttClient():
@@ -108,7 +111,8 @@ def get_end_time(end_time: str) -> EndTime:
 
 def should_it_run(start_time: str, end_time: str) -> bool:
     """Return True if current time is > start_time and < end_time."""
-    now = datetime.datetime.now()
+    tz = pytz.timezone(TIMEZONE)
+    now = datetime.datetime.now(tz)
     s_time = get_start_time(start_time)
     e_time = get_end_time(end_time)
     if now.hour >= s_time.hour and now.hour < e_time.hour:
@@ -121,9 +125,8 @@ def should_it_run(start_time: str, end_time: str) -> bool:
                 return True
         return False
     elif now.hour == e_time.hour:
-        if now.minute > s_time.minute:
-            if now.minute < e_time.minute:
-                return True
+        if now.minute < e_time.minute:
+            return True
     return False
 
 
