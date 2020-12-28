@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: colorize
+spec:
+  selector:
+    matchLabels:
+      app: colorize
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: colorize
+        version: "VERSION"
+    spec:
+      containers:
+        - image: IMAGE_NAME
+          name: colorize
+          env:
+            - name: MQTT_SERVER
+              valueFrom:
+                configMapKeyRef:
+                  name: colorize
+                  key: mqtt_server
+            - name: MQTT_TOPIC
+              valueFrom:
+                configMapKeyRef:
+                  name: colorize
+                  key: mqtt_topic
+            - name: START_TIME
+              valueFrom:
+                configMapKeyRef:
+                  name: colorize
+                  key: start_time
+            - name: END_TIME
+              valueFrom:
+                configMapKeyRef:
+                  name: colorize
+                  key: end_time

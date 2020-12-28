@@ -1,0 +1,7 @@
+.idea
+.config
+.venv
+kubernetes/*.yaml
+kubernetes/*.backup
+!kubernetes/colorize_TEMPLATE.yaml
+!kubernetes/configmap_TEMPLATE.yaml
