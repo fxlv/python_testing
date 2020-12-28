@@ -8,13 +8,17 @@
 # The script sends command by publishing them to the relevant MQTT topic.
 #
 #
-#
+__version__ = "0.1"
+
+import datetime
 import os
 import random
-import time
-import paho.mqtt.client as mqtt
-import sys
 import signal
+import sys
+import time
+from collections import namedtuple
+
+import paho.mqtt.client as mqtt
 
 
 class MqttClient():
@@ -85,22 +89,66 @@ def main(mqtt_client):
         print(msg)
         rand_sleep()
 
+
+StartTime = namedtuple("StartTime", "hour minute")
+EndTime = namedtuple("EndTime", "hour minute")
+
+
+def get_start_time(start_time: str) -> StartTime:
+    start_time = start_time.split(":")
+    s_time = StartTime(int(start_time[0]), int(start_time[1]))
+    return s_time
+
+
+def get_end_time(end_time: str) -> EndTime:
+    end_time = end_time.split(":")
+    e_time = EndTime(int(end_time[0]), int(end_time[1]))
+    return e_time
+
+
+def should_it_run(start_time: str, end_time: str) -> bool:
+    """Return True if current time is > start_time and < end_time."""
+    now = datetime.datetime.now()
+    s_time = get_start_time(start_time)
+    e_time = get_end_time(end_time)
+    if now.hour >= s_time.hour and now.hour < e_time.hour:
+        if now.hour > s_time.hour:
+            # current hour is greater than start hour
+            return True
+        if now.hour == s_time.hour:
+            # current hour is the same as start hour, need to check minute
+            if now.minute >= s_time.minute:
+                return True
+        return False
+    elif now.hour == e_time.hour:
+        if now.minute > s_time.minute:
+            if now.minute < e_time.minute:
+                return True
+    return False
+
+
 def handle_sigterm(sig, frame):
     raise SystemExit
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, handle_sigterm)
     mqtt_server = os.getenv("MQTT_SERVER", None)
     mqtt_topic = os.getenv("MQTT_TOPIC", None)
+    start_time = os.getenv("START_TIME", "12:00")
+    end_time = os.getenv("END_TIME", "23:00")
     if mqtt_topic is None or mqtt_server is None:
         print("Please set MQTT_SERVER and MQTT_TOPIC environment variables.")
         sys.exit(1)
     mqtt_client = MqttClient(mqtt_server, mqtt_topic)
     try:
         while True:
-            main(mqtt_client)
+            if should_it_run(start_time, end_time):
+                main(mqtt_client)
+            else:
+                print("Not run time, sleeping.")
+                time.sleep(60)
     except (KeyboardInterrupt, SystemExit):
         print("End of the line. Switching the light off.")
         mqtt_client.pub('{"state":"OFF"}')
