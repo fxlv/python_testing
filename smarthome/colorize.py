@@ -151,6 +151,7 @@ if __name__ == "__main__":
                 main(mqtt_client)
             else:
                 print("Not run time, sleeping.")
+                mqtt_client.pub('{"state":"OFF"}')
                 time.sleep(60)
     except (KeyboardInterrupt, SystemExit):
         print("End of the line. Switching the light off.")
