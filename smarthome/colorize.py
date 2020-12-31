@@ -39,7 +39,7 @@ class MqttClient():
 
 
 def rand_brightness():
-    return random.choice(range(10, 250))
+    return random.choice(range(150, 250))
 
 
 def rand_sleep():
